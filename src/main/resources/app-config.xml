@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd
+                           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <context:annotation-config />
+
+    <context:component-scan base-package="org.zezutom.crashtracker" />
+
+    <!-- Persistence -->
+    <jdbc:embedded-database id="dataSource" type="H2" />
+
+    <jdbc:initialize-database data-source="dataSource" ignore-failures="DROPS">
+        <jdbc:script location="classpath:schema.sql" />
+    </jdbc:initialize-database>
+
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                <property name="showSql" value="true" />
+                <property name="generateDdl" value="true" />
+                <property name="databasePlatform" value="org.hibernate.dialect.HSQLDialect" />
+            </bean>
+        </property>
+        <property name="packagesToScan" value="org.zezutom.crashtracker.model" />
+    </bean>
+
+    <bean id="jpaDialect" class="org.springframework.orm.jpa.vendor.HibernateJpaDialect" />
+
+    <bean id="txManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory" />
+        <property name="jpaDialect" ref="jpaDialect" />
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+    <tx:annotation-driven transaction-manager="txManager" />
+
+    <!-- Activiti -->
+    <bean id="processEngineConfiguration" class="org.activiti.spring.SpringProcessEngineConfiguration">
+        <property name="dataSource" ref="dataSource" />
+        <property name="transactionManager" ref="txManager" />
+        <property name="databaseSchemaUpdate" value="true" />
+        <property name="jobExecutorActivate" value="false" />
+        <property name="mailServerHost" value="localhost" />
+        <property name="mailServerPort" value="2500" />
+    </bean>
+
+    <bean id="processEngine" class="org.activiti.spring.ProcessEngineFactoryBean">
+        <property name="processEngineConfiguration" ref="processEngineConfiguration" />
+    </bean>
+
+    <bean id="repositoryService" factory-bean="processEngine" factory-method="getRepositoryService" />
+
+    <bean id="runtimeService" factory-bean="processEngine" factory-method="getRuntimeService" />
+
+    <bean id="taskService" factory-bean="processEngine" factory-method="getTaskService" />
+
+    <bean id="historyService" factory-bean="processEngine" factory-method="getHistoryService" />
+
+    <bean id="managementService" factory-bean="processEngine" factory-method="getManagementService" />
+
+    <!-- JBehave -->
+    <bean class="org.jbehave.core.io.LoadFromClasspath">
+        <constructor-arg>
+            <bean class="org.jbehave.core.embedder.EmbedderClassLoader">
+                <constructor-arg>
+                    <list>
+                        <value>target/test-classes</value>
+                    </list>
+                </constructor-arg>
+            </bean>
+        </constructor-arg>
+    </bean>
+
+    <bean class="org.jbehave.core.parsers.RegexPrefixCapturingPatternParser">
+        <constructor-arg value="$" />
+    </bean>
+
+    <bean class="org.jbehave.core.configuration.spring.SpringStoryControls">
+        <property name="dryRun" value="false" />
+        <property name="skipScenariosAfterFailure" value="false" />
+    </bean>
+
+    <bean class="org.jbehave.core.configuration.spring.SpringStoryReporterBuilder" init-method="withDefaultFormats">
+        <property name="formats">
+            <list>
+                <value>CONSOLE</value>
+                <value>TXT</value>
+                <value>HTML</value>
+                <value>XML</value>
+            </list>
+        </property>
+    </bean>
+</beans>
