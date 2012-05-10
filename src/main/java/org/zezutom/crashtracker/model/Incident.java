@@ -4,7 +4,10 @@ import org.zezutom.crashtracker.util.AppUtil;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -42,6 +45,9 @@ public class Incident implements Serializable {
 
     @Column(name = "assigned_to")
     private String assignedTo;
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE, mappedBy = "incident")
+    private List<IncidentOutput> outputs;
 
     public Incident() {}
 
@@ -108,5 +114,21 @@ public class Incident implements Serializable {
 
     public void setAssignedTo(String assignedTo) {
         this.assignedTo = assignedTo;
+    }
+
+    public void addOutput(IncidentOutput output) {
+        if (outputs == null) {
+            outputs = new ArrayList<IncidentOutput>();
+        }
+        outputs.add(output);
+        output.setIncident(this);
+    }
+
+    public List<IncidentOutput> getOutputs() {
+        return Collections.unmodifiableList(outputs);
+    }
+
+    public IncidentOutput getLastOutput() {
+        return (outputs == null || outputs.isEmpty()) ? null : outputs.get(outputs.size() - 1);
     }
 }

@@ -2,6 +2,8 @@ package org.zezutom.crashtracker.service;
 
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.task.Task;
 import org.springframework.stereotype.Service;
 import org.zezutom.crashtracker.util.ModelBuilder;
 
@@ -29,6 +31,9 @@ public class ActivitiWorkflowManager implements WorkflowManager {
     private RuntimeService runtimeService;
 
     @Resource
+    private TaskService taskService;
+
+    @Resource
     private IncidentManager incidentManager;
 
     private String deploymentId;
@@ -54,11 +59,17 @@ public class ActivitiWorkflowManager implements WorkflowManager {
         runtimeService.startProcessInstanceByKey(processId, model);
     }
 
+    @Override
+    public void completeTask(String name, String assignee) {
+        Task task = taskService.createTaskQuery().taskName(name).taskAssignee(assignee).singleResult();
+        taskService.complete(task.getId());
+    }
+
     private void deploy() {
         deploymentId = repositoryService
                 .createDeployment()
-                .addClasspathResource("workflows/report_incident.bpmn20.xml")
-                .addClasspathResource("workflows/assign_engineer.bpmn20.xml")
+                .addClasspathResource("workflows/confirm_new_incident.bpmn20.xml")
+                .addClasspathResource("workflows/create_assignment.bpmn20.xml")
                 .deploy().getId();
     }
 

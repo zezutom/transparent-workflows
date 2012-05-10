@@ -13,8 +13,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.subethamail.wiser.Wiser;
 import org.subethamail.wiser.WiserMessage;
+import org.zezutom.crashtracker.model.Incident;
+import org.zezutom.crashtracker.model.IncidentStatus;
+import org.zezutom.crashtracker.service.IncidentManager;
 import org.zezutom.crashtracker.util.MailParser;
 
 import javax.annotation.Resource;
@@ -47,6 +51,13 @@ import static org.junit.Assert.assertThat;
 public class StoryTest extends InjectableEmbedder {
 
     private static Wiser wiser;
+
+    private static IncidentManager incidentManager;
+
+    public StoryTest() {
+        incidentManager = new ClassPathXmlApplicationContext("app-config.xml").getBean(IncidentManager.class);
+        assertNotNull(incidentManager);
+    }
 
     @Before
     public void setUp() {
@@ -85,6 +96,15 @@ public class StoryTest extends InjectableEmbedder {
         return new StoryFinder().findPaths(codeLocationFromPath("src/main/resources"), "**/*.story", "");
     }
 
+    // Utility methods
+
+    public static Incident findIncident(Long id) {
+        return incidentManager.find(id);
+    }
+
+    public static void assertIncidentStatus(Long id, IncidentStatus status) {
+        assertThat(findIncident(id).getStatus(), is(status));
+    }
 
 
 }

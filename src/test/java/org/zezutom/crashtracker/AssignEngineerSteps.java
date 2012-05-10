@@ -8,7 +8,6 @@ import org.jbehave.core.annotations.When;
 import org.zezutom.crashtracker.model.Incident;
 import org.zezutom.crashtracker.model.IncidentStatus;
 import org.zezutom.crashtracker.service.CrashTracker;
-import org.zezutom.crashtracker.service.IncidentManager;
 import org.zezutom.crashtracker.util.AppUtil;
 import org.zezutom.crashtracker.util.Steps;
 
@@ -32,9 +31,6 @@ public class AssignEngineerSteps {
     private CrashTracker crashTracker;
 
     @Resource
-    private IncidentManager incidentManager;
-
-    @Resource
     private TaskService taskService;
 
     private Long incidentId = 1L;
@@ -52,14 +48,10 @@ public class AssignEngineerSteps {
         assertTrue(assigned);
     }
 
-    @Then("the incident status should be $status")
-    public void theIncidentStatusShouldBe(IncidentStatus status) {
-        assertThat(findIncident().getStatus(), is(status));
-    }
-
     @Then("the incident should be assigned to $assignee")
     public void theIncidentShouldBeAssignedTo(String assignee) {
         assertThat(findIncident().getAssignedTo(), is(assignee));
+        assertThat(findIncident().getStatus(), is(IncidentStatus.ASSIGNED));
     }
 
     @Then("a new task should be created for $assignee")
@@ -82,7 +74,7 @@ public class AssignEngineerSteps {
     }
 
     private Incident findIncident() {
-        return incidentManager.find(incidentId);
+        return StoryTest.findIncident(incidentId);
     }
 
 }

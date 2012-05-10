@@ -28,4 +28,12 @@ public interface WorkflowManager {
      * @param model     any parameters out of incident's reach
      */
     void process(Long incidentId, String processId, Map<String, Object> model);
+
+    /**
+     * Completes a pending task.
+     *
+     * @param name
+     * @param assignee
+     */
+    void completeTask(String name, String assignee);
 }

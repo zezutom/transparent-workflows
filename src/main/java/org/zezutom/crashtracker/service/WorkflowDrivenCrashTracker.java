@@ -24,6 +24,7 @@ import java.util.Map;
  * The implementation driven by the Activiti workflow engine.
  */
 @Service
+@Transactional(propagation = Propagation.REQUIRED)
 public class WorkflowDrivenCrashTracker implements CrashTracker {
 
     private static final Map<IncidentSeverity, Integer> reactionTime = new EnumMap<IncidentSeverity, Integer>(IncidentSeverity.class);
@@ -40,7 +41,6 @@ public class WorkflowDrivenCrashTracker implements CrashTracker {
     @Resource
     private WorkflowManager workflowManager;
 
-    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public Long captureIncident(String description, IncidentSeverity severity) {
         // capture the incident
@@ -52,11 +52,10 @@ public class WorkflowDrivenCrashTracker implements CrashTracker {
         return incidentId;
      }
 
-    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public boolean assignEngineer(Long incidentId, String engineer) {
         // get the incident
-        Incident incident = incidentManager.find(incidentId);
+        Incident incident = findIncident(incidentId);
 
         // update it
         incident.setAssignedTo(engineer);
@@ -66,8 +65,8 @@ public class WorkflowDrivenCrashTracker implements CrashTracker {
         // define the deadline
         final Date dueDate = AppUtil.hoursFromNow(reactionTime.get(incident.getSeverity()));
 
-        // let the assignment be completed
-        workflowManager.process(incidentId, "assignEngineer", new ModelBuilder().add("dueDate", dueDate).build());
+        // assign the engineer
+        workflowManager.process(incidentId, "createAssignment", new ModelBuilder().add("dueDate", dueDate).build());
 
         // no failures
         return true;
@@ -75,6 +74,22 @@ public class WorkflowDrivenCrashTracker implements CrashTracker {
 
     @Override
     public void captureOutput(Long incidentId, IncidentOutput output) {
-        //To change body of implemented methods use File | Settings | File Templates.
+
+        // get the incident
+        Incident incident = findIncident(incidentId);
+
+        // add the output to it
+        incident.addOutput(output);
+
+        // close the incident if it has been resolved
+        if (output.isResolved()) {
+            incident.setStatus(IncidentStatus.CLOSED);
+            workflowManager.completeTask("resolve the incident", incident.getAssignedTo());
+        }
+        incidentManager.save(incident);
+    }
+
+    private Incident findIncident(Long id) {
+        return incidentManager.find(id);
     }
 }
