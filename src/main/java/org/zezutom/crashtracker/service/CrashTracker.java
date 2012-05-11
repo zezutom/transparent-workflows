@@ -38,6 +38,4 @@ public interface CrashTracker {
      * @param output    mainly if the problem was fixed along with other details
      */
     void captureOutput(Long incidentId, IncidentOutput output);
-
-
 }
