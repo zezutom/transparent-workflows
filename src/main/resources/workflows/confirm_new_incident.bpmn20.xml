@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions id="definitions"
+             targetNamespace="http://activiti.org/bpmn20"
+             xmlns:activiti="http://activiti.org/bpmn"
+             xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL">
+
+    <process id="confirmNewIncident" name="send an email notification regarding a new incident">
+        <startEvent id="newIncidentCaptured"/>
+
+        <sequenceFlow id="toSendNewIncidentMail" sourceRef="newIncidentCaptured" targetRef="sendNewIncidentMail"/>
+
+        <serviceTask id="sendNewIncidentMail" activiti:type="mail">
+            <extensionElements>
+                <activiti:field name="to" expression="admin@crashtracker.com" />
+                <activiti:field name="subject" expression="${incident.createdBy}: New Incident Report" />
+                <activiti:field name="html" expression="${incident.severity.value} Problem: ${incident.description}" />
+            </extensionElements>
+        </serviceTask>
+        <sequenceFlow id="toIncidentConfirmed" sourceRef="sendNewIncidentMail" targetRef="incidentConfirmed" />
+
+        <endEvent id="incidentConfirmed" />
+    </process>
+</definitions>
