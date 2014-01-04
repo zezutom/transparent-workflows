@@ -1,11 +1,7 @@
-transparent-workflows
-=====================
-
-BDD &amp; Activiti to make workflows crystal clear and easy to maintain
 
 Integration with TestNG
 =======================
-Please check the branch feature/testng. JUnit has been replaced with testNG. JBehave itself is independent from
+Please check the branch feature/testng, where JUnit has been replaced with testNG. JBehave itself is independent from
 the underlying test framework, so there is no change in how the project run - i.e. ```mvn clean package``` or ```mvn clean test```.
 In my opinion, maven is the best choice of how to run the project.
 
