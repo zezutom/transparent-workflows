@@ -19,8 +19,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.testng.Assert.assertNotNull;
 
 /**
  * Created with IntelliJ IDEA.

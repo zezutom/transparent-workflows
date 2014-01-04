@@ -15,7 +15,8 @@ import javax.annotation.Resource;
 import java.util.Date;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.testng.Assert.*;
 
 /**
  * Created with IntelliJ IDEA.

@@ -5,13 +5,18 @@ import org.jbehave.core.InjectableEmbedder;
 import org.jbehave.core.annotations.Configure;
 import org.jbehave.core.annotations.UsingEmbedder;
 import org.jbehave.core.annotations.spring.UsingSpring;
+import org.jbehave.core.configuration.Configuration;
+import org.jbehave.core.configuration.MostUsefulConfiguration;
 import org.jbehave.core.embedder.Embedder;
+import org.jbehave.core.embedder.EmbedderControls;
 import org.jbehave.core.io.StoryFinder;
 import org.jbehave.core.junit.spring.SpringAnnotatedEmbedderRunner;
 import org.jbehave.core.steps.ParameterConverters;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 import org.junit.runner.RunWith;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.subethamail.wiser.Wiser;
@@ -21,7 +26,6 @@ import org.zezutom.crashtracker.model.IncidentStatus;
 import org.zezutom.crashtracker.service.IncidentManager;
 import org.zezutom.crashtracker.util.MailParser;
 
-import javax.annotation.Resource;
 import javax.mail.MessagingException;
 import java.io.IOException;
 import java.util.List;
@@ -40,33 +44,40 @@ import static org.junit.Assert.assertThat;
  *
  * Makes use of the JBehave's Spring support.
  */
-@RunWith(SpringAnnotatedEmbedderRunner.class)
-@Configure(parameterConverters = ParameterConverters.EnumConverter.class)
-@UsingEmbedder(
-        embedder = Embedder.class,
-        generateViewAfterStories = true,
-        ignoreFailureInStories = true,
-        ignoreFailureInView = true)
+//@Configure(parameterConverters = ParameterConverters.EnumConverter.class)
 @UsingSpring(resources = {"classpath:app-config.xml"})
-public class StoryTest extends InjectableEmbedder {
+@ContextConfiguration(locations = "classpath:app-config.xml")
+public class StoryTest extends AbstractTestNGSpringContextTests {
 
     private static Wiser wiser;
 
     private static IncidentManager incidentManager;
 
+    private class MyTestRunner extends Embedder {
+
+        @Override
+        public EmbedderControls embedderControls() {
+            return new EmbedderControls()
+                    .doGenerateViewAfterStories(true)
+                    .doIgnoreFailureInStories(true)
+                    .doIgnoreFailureInView(true);
+        }
+    }
+
     public StoryTest() {
         incidentManager = new ClassPathXmlApplicationContext("app-config.xml").getBean(IncidentManager.class);
         assertNotNull(incidentManager);
+        setUp();
     }
 
-    @Before
+    //@BeforeTest
     public void setUp() {
         wiser = new Wiser();
         wiser.setPort(2500);
         wiser.start();
     }
 
-    @After
+    @AfterTest
     public void tearDown() {
         wiser.stop();
     }
@@ -87,9 +98,8 @@ public class StoryTest extends InjectableEmbedder {
     }
 
     @Test
-    @Override
-    public void run() throws Throwable {
-        injectedEmbedder().runStoriesAsPaths(storyPaths());
+    public void runStories() {
+        new MyTestRunner().runStoriesAsPaths(storyPaths());
     }
 
     protected List<String> storyPaths() {
